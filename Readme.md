@@ -14,6 +14,6 @@ c.Send("It works!");
 ```csharp
 Server s = new Server(8080);
 s.Connected += (client) => Console.WriteLine($"{client.IP} Connected!")
-s.Received += (buffer) => Console.WriteLine(Encoding.UTF8.GetString(buffer))
+s.Received += (client, buffer) => Console.WriteLine(Encoding.UTF8.GetString(buffer))
 s.Run();
 ```
