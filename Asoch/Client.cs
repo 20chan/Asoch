@@ -10,6 +10,7 @@ namespace Asoch
 {
     public class Client
     {
+        public const int BUFFER_SIZE = 2048;
         #region Private members
         private Socket _socket;
         #endregion
@@ -80,6 +81,17 @@ namespace Asoch
             {
                 return -1;
             }
+        }
+
+        /// <summary>
+        /// Receive data
+        /// </summary>
+        /// <returns></returns>
+        public async Task<byte[]> Receive()
+        {
+            byte[] res = new byte[BUFFER_SIZE];
+            await _socket.ReceiveTask(res, 0, BUFFER_SIZE, SocketFlags.None);
+            return res;
         }
     }
 }
