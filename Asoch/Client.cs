@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Net;
 using System.Net.Sockets;
 
@@ -10,7 +11,6 @@ namespace Asoch
     public class Client
     {
         #region Private members
-        private ManualResetEvent _connectEvent;
         private Socket _socket;
         #endregion
 
@@ -19,53 +19,54 @@ namespace Asoch
         public int Port { get; private set; }
 
         public bool IsConnected { get; private set; } = false;
-#endregion
-
+        #endregion
+        
         public Client(string hostIP, int port)
         {
             Host = hostIP; Port = port;
-            _connectEvent = new ManualResetEvent(false);
         }
-
-        #region Connect
-        public bool Connect()
+        
+        public async Task<bool> Connect()
         {
-            _connectEvent.Reset();
             _socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.IP);
-            _socket.BeginConnect(Host, Port, new AsyncCallback(ConnectCallback), _socket);
-            _connectEvent.WaitOne();
-            return IsConnected;
-        }
-
-        private void ConnectCallback(IAsyncResult res)
-        {
             try
             {
-                Socket client = res.AsyncState as Socket;
-                client.EndConnect(res);
+                await _socket.ConnectTaskAsync(new IPEndPoint(IPAddress.Parse(Host), Port));
+                IsConnected = true;
             }
             catch(SocketException)
             {
                 IsConnected = false;
             }
-            finally
+            return IsConnected;
+        }
+        
+        public async Task<bool> Send(byte[] buffer, int offset, int size)
+        {
+            try
             {
-                _connectEvent.Set();
+                await _socket.SendTaskAsync(buffer, offset, size, SocketFlags.None);
+                return true;
+            }
+            catch(SocketException)
+            {
+                return false;
             }
         }
+    }
 
-        public void DisConnect()
+    public static class AsyncSocket
+    {
+        public static Task ConnectTaskAsync(this Socket socket, EndPoint endpoint)
         {
-            _socket.Shutdown(SocketShutdown.Both);
-            _socket.Close();
+            return Task.Factory.FromAsync(socket.BeginConnect, socket.EndConnect, endpoint, null);
         }
-        #endregion
 
-        #region Send
-
-        #endregion
-
-        #region Receive
-        #endregion
+        public static Task<int> SendTaskAsync(this Socket socket, byte[] buffer, int offset, int size, SocketFlags flags)
+        {
+            // TODO: 도대체 씨발 뭐가 문제인지 찾기
+            // return Task.Factory.FromAsync(() => socket.BeginSend(buffer, offset, size, flags), socket.EndSend, buffer, offset, size, flags, null);
+            throw new NotImplementedException();
+        }
     }
 }
