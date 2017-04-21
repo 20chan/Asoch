@@ -6,7 +6,17 @@ using System.Threading.Tasks;
 
 namespace Asoch
 {
-    interface IServer
+    public abstract class IServer
     {
+        public const int BUFFER_SIZE = 2048;
+        public const int LISTEN_BACKLOG = 20;
+
+        public int Port { get; protected set; }
+        public bool IsRunning { get; protected set; } = false;
+
+        public IServer(int port)
+        {
+            Port = port;
+        }
     }
 }

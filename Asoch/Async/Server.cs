@@ -9,7 +9,7 @@ namespace Asoch
 {
     public class Server : IServer
     {
-        private class StateObject
+        public class StateObject
         {
             public Socket Sock = null;
             public byte[] Buffer = new byte[BUFFER_SIZE];
@@ -22,6 +22,8 @@ namespace Asoch
 
         private Socket _socket;
         private List<StateObject> _clients;
+
+        public event Action<StateObject, byte[]> Received;
 
         public Server(int port) : base(port)
         {
@@ -55,21 +57,30 @@ namespace Asoch
             if(IsSocketConnected(state.Sock))
             {
                 _clients.Remove(state);
+                state.Sock.Close();
+            }
+
+            int read = state.Sock.EndReceive(res);
+            if (read > 0)
+            {
+                byte[] result = new byte[read];
+                Array.Copy(state.Buffer, result, read);
+                Received?.Invoke(state, result);
+
+                state.Sock.BeginReceive(state.Buffer, 0, BUFFER_SIZE, 0, new AsyncCallback(receiveCallback), state);
             }
         }
 
-        private void Receive(object sender, SocketAsyncEventArgs e)
+        public void Send(StateObject client, byte[] data)
         {
-            byte[] res = new byte[BUFFER_SIZE];
-            Task.Factory.FromAsync(_socket.BeginReceive(res, 0, BUFFER_SIZE, SocketFlags.None, Receive, null),
-                _socket.EndReceive);
+            client.Sock.BeginSend(data, 0, data.Length, SocketFlags.None
+                , new AsyncCallback(sendCallback), client);
         }
 
-        public async Task<byte[]> Receive()
+        private void sendCallback(IAsyncResult res)
         {
-            byte[] res = new byte[BUFFER_SIZE];
-            await _socket.ReceiveTask(res, 0, BUFFER_SIZE, SocketFlags.None);
-            return res;
+            StateObject state = res.AsyncState as StateObject;
+            state.Sock.EndSend(res);
         }
     }
 }
