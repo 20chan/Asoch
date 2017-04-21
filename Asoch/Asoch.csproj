@@ -40,10 +40,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Client.cs" />
+    <Compile Include="Async\Client.cs" />
+    <Compile Include="IClient.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Server.cs" />
-    <Compile Include="SocketTaskAsync.cs" />
+    <Compile Include="Async\Server.cs" />
+    <Compile Include="Async\SocketTaskAsync.cs" />
+    <Compile Include="Sync\Client.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

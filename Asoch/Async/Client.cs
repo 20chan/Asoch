@@ -3,23 +3,15 @@ using System.Net.Sockets;
 
 namespace Asoch
 {
-    public class Client
+    public class Client : IClient
     {
-        public const int BUFFER_SIZE = 2048;
         #region Private members
         private Socket _socket;
         #endregion
 
-        #region Properties
-        public string Host { get; private set; }
-        public int Port { get; private set; }
-
-        public bool IsConnected { get; private set; } = false;
-        #endregion
-        
-        public Client(string hostIP, int port)
+        public Client(string host, int port) : base(host, port)
         {
-            Host = hostIP; Port = port;
+
         }
         
         /// <summary>
@@ -46,7 +38,7 @@ namespace Asoch
         /// </summary>
         /// <param name="reuse"></param>
         /// <returns>Succeed of disconnection</returns>
-        public async Task<bool> DisConnect(bool reuse)
+        public async Task<bool> Disconnect(bool reuse)
         {
             try
             {
